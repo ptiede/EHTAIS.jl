@@ -1,14 +1,14 @@
-using Distributed
-using DelimitedFiles
 
 @everywhere begin
     const filedir = @__DIR__
-    @show filedir
 end
 
 
 using Pkg; Pkg.activate(filedir)
-Pkg.add(url="https://github.com/ptiede/EHTAIS.jl")
+using Distributed
+using DelimitedFiles
+
+Pkg.add(path="../")
 # Pkg.add(["Comonicon", "DataFrames", "CSV"])
 Pkg.instantiate()
 Pkg.precompile()
@@ -17,12 +17,13 @@ Pkg.precompile()
 @everywhere begin
     using Pkg;Pkg.activate(filedir)
 end
-
+using CondaPkg
+ENV["JULIA_CONDAPKG_OFFLINE"] = "yes"
 using EHTAIS
 # Now turn off CondaPkg
 @everywhere begin
     using CondaPkg
-    ENV["JULIA_CONDAPKG_OFFLINE"] = true
+    ENV["JULIA_CONDAPKG_OFFLINE"] = "yes"
 end
 @everywhere using EHTAIS
 
