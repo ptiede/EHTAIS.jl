@@ -12,4 +12,4 @@ script. To run this you just need to call
 > julia -p NCORES parallel_snapshotfits.jl "imfiles" "/path/to/grmhd/README.txt" "path/to/eht/uvfits/data" "path/to/output/file"
 ```
 
-The first time calling this will be a little slow because Julia will be installing all the dependencies. This should speed up considerably after that. On my machine with 16 cores I am able to analyze 300 GRMHD snapshot with the EHT 2017 data in ~ 2min. If you experience is a lot slower please let me know.
+The first time calling this will be a little slow because Julia will be installing all the dependencies. This should speed up considerably after that. On my machine with 16 cores I am able to analyze 3000 GRMHD snapshot with the EHT 2017 data in ~ 5min. If you experience is a lot slower please let me know.
