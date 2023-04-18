@@ -221,7 +221,7 @@ function snapshot_fit(img::IntensityMap, mod0::Float64, data::DataProds, distamp
     sol0 = solve(prob0, ECA(N=500, options=Metaheuristics.Options(f_calls_limit=fevals, f_tol=1e-3)))
     if lbfgs
         prob = OptimizationProblem(fpost, sol0.u, nothing)
-        sol = solve(prob, LBFGS(); maxiters=1_000, g_tol=1e-1, f_tol=1e-7)
+        sol = solve(prob, LBFGS(); maxiters=2_000, g_tol=1e-1, f_tol=1e-7)
     else
         sol = sol0
     end
