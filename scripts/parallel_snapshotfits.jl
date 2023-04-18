@@ -24,6 +24,8 @@ using EHTAIS
 @everywhere begin
     using CondaPkg
     ENV["JULIA_CONDAPKG_OFFLINE"] = "yes"
+    using Distributions
+    using DistributionsAD
 end
 @everywhere using EHTAIS
 
@@ -48,6 +50,7 @@ Runs snapshot fitting on the list of files passed
 # Options
 
 - `-f, --fevals=<int>`: The number of evaluations of the loglikelihood.
+- `-y, --year=<string>`: The year of the data. Options are 2017 and 2018
 
 # Flags
 
@@ -55,7 +58,8 @@ Runs snapshot fitting on the list of files passed
 """
 @main function main(imfile::String, readme::String, uvfile::String,
                     outfile::String="snapshot_fitresults.csv";
-                    fevals::Int=250_000, amp::Bool=false)
+                    fevals::Int=250_000, amp::Bool=false,
+                    year::String="2017")
 
     @info "Image files path: $(imfile)"
     @info "Readme path: $(readme)"
@@ -65,7 +69,11 @@ Runs snapshot fitting on the list of files passed
 
     if amp
         data = load_data(uvfile, AmpCP)
-        distamp = station_tuple(data.amp, Normal(0.0, 0.1); LM=Normal(0.0, 1.0))
+        if year == "2017"
+            distamp = station_tuple(data.amp, Normal(0.0, 0.1); LM=Normal(0.0, 1.0))
+        elseif year == "2018"
+            distamp = station_tuple(data.amp, Normal(0.0, 0.1); LM=Normal(0.0, 0.3), GL=Normal(0.0, 1.0))
+        end
     else
         data = load_data(uvfile, Closures)
         distamp = nothing
