@@ -1,4 +1,5 @@
 using Distributed
+using DelimitedFiles
 
 @everywhere begin
     const filedir = @__DIR__
@@ -17,7 +18,12 @@ Pkg.precompile()
     using Pkg;Pkg.activate(filedir)
 end
 
-
+using EHTAIS
+# Now turn off CondaPkg
+@everywhere begin
+    using CondaPkg
+    ENV["JULIA_CONDAPKG_OFFLINE"] = true
+end
 @everywhere using EHTAIS
 
 using Comonicon
@@ -57,13 +63,13 @@ Runs snapshot fitting on the list of files passed
     @info "outputting results to $(outfile)"
 
     if amp
-        data = load_data(uvname, AmpCP)
+        data = load_data(uvfile, AmpCP)
         distamp = station_tuple(data.amp, Normal(0.0, 0.1); LM=Normal(0.0, 1.0))
     else
-        data = load_data(uvname, Closures)
+        data = load_data(uvfile, Closures)
         distamp = nothing
     end
-    imfiles = loaddir(file)
+    imfiles = loaddir(imfile)
     res = pmap(imfiles) do f
         amp && return snapshot_fit(f, readme, data, distamp; lbfgs=true, fevals)
         return snapshot_fit(f, readme, data, distamp; lbfgs=false, fevals)

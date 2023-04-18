@@ -1,4 +1,7 @@
 [deps]
 CSV = "336ed68f-0bac-5ca0-87d4-7b16caf5d00b"
 Comonicon = "863f3e99-da2a-4334-8734-de3dacbe5542"
+CondaPkg = "992eb4ea-22a4-4c89-a5bb-47a3300528ab"
 DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
+DelimitedFiles = "8bb1440f-4735-579b-a4ab-409b98df4dab"
+EHTAIS = "298f3469-2f3e-4d40-9353-5c0a7621aa52"
