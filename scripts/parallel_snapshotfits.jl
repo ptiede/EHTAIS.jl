@@ -22,8 +22,8 @@ ENV["JULIA_CONDAPKG_OFFLINE"] = "yes"
 using EHTAIS
 # Now turn off CondaPkg
 @everywhere begin
-    using CondaPkg
     ENV["JULIA_CONDAPKG_OFFLINE"] = "yes"
+    using CondaPkg
     using Distributions
     using DistributionsAD
 end
