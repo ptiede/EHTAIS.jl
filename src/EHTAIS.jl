@@ -209,7 +209,7 @@ distamp = station_tuple(data.amp, Normal(0.0, 0.1); LM = Normal(0.0, 1.0))
 res = snapshot_fit(imgname, readme, data, distamp; lbfgs=true)
 ```
 """
-function snapshot_fit(img::IntensityMap, mod0::Float64, data::DataProds, distamp=nothing; fevals=250_000, lbfgs=true)
+function snapshot_fit(img::IntensityMap, mod0::Float64, data::DataProds, distamp=nothing; fevals=100_000, lbfgs=true)
     mimg = modelimage(ContinuousImage(img, DeltaPulse()), FFTAlg())
     post = create_post(mimg, mod0, data, distamp)
 
@@ -218,6 +218,8 @@ function snapshot_fit(img::IntensityMap, mod0::Float64, data::DataProds, distamp
 
     fpost = OptimizationFunction(tpost, Optimization.AutoForwardDiff())
     prob0 = OptimizationProblem(fpost, rand(ndim) .- 0.5, nothing, lb=fill(-5.0, ndim), ub=fill(5.0, ndim))
+    fpost(rand(ndim), nothing)
+    @time fpost(rand(ndim), nothing)
     sol0 = solve(prob0, ECA(N=500, options=Metaheuristics.Options(f_calls_limit=fevals, f_tol=1e-3)))
     if lbfgs
         prob = OptimizationProblem(fpost, sol0.u, nothing)
@@ -229,17 +231,18 @@ function snapshot_fit(img::IntensityMap, mod0::Float64, data::DataProds, distamp
     score = post.lklhd.model
     xopt = Comrade.transform(tpost, sol.u)
     mopt = score(xopt)
+    lklhd = logdensityof(post.lklhd, xopt)
     r2 = map(x->chi2(mopt, x)/(length(x) - ndim), values(data))
     r2data = NamedTuple{map(x->Symbol(:chi2_, x), keys(data))}(r2)
     rchi2 = chi2(mopt, values(data)...)/(sum(length, values(data)) - ndim)
-    chi2data = merge(r2data, (chi2 = rchi2,))
+    chi2data = merge(r2data, (rchi2 = rchi2, chi2=chi2(mopt, values(data)...), lklhd = lklhd))
     @info "chi2 $(rchi2)"
     return merge(xopt, chi2data)
 end
 
 
 
-function snapshot_fit(fname::String, readme::String, data::DataProds, distamp=nothing; fevals=250_000, lbfgs=true)
+function snapshot_fit(fname::String, readme::String, data::DataProds, distamp=nothing; fevals=100_000, lbfgs=true)
     img, mod = load_image(fname, readme)
     res = snapshot_fit(img, mod, data, distamp; fevals, lbfgs)
     return merge(res, (image_filename = fname,))
