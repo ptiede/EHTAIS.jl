@@ -17,8 +17,6 @@ Pkg.precompile()
 @everywhere begin
     using Pkg;Pkg.activate(filedir)
 end
-using CondaPkg
-ENV["JULIA_CONDAPKG_OFFLINE"] = "yes"
 using EHTAIS
 # Now turn off CondaPkg
 @everywhere begin
