@@ -169,9 +169,9 @@ function create_post(mimg::Comrade.ModelImage, mod0::Float64, data::AmpCP, dista
     lklhd = RadioLikelihood(score_ampcp, metadata, values(data)...)
     gcache = jonescache(data.amp, ScanSeg())
     prior = (
-                mod   = Uniform(μas2rad(0.1), μas2rad(6.0)),
+                mod   = Uniform(μas2rad(0.1), μas2rad(10.0)),
                 pa    = Uniform(-π/2, 3π/2),
-                flux  = Uniform(0.1, 3.0),
+                flux  = Uniform(0.1, 6.0),
                 lgamp = CalPrior(distamp, gcache)
             )
     post = Posterior(lklhd, prior)
@@ -220,7 +220,7 @@ function snapshot_fit(img::IntensityMap, mod0::Float64, data::DataProds, distamp
     prob0 = OptimizationProblem(fpost, rand(ndim) .- 0.5, nothing, lb=fill(-5.0, ndim), ub=fill(5.0, ndim))
     fpost(rand(ndim), nothing)
     @time fpost(rand(ndim), nothing)
-    sol0 = solve(prob0, ECA(N=500, options=Metaheuristics.Options(f_calls_limit=fevals, f_tol=1e-3)))
+    sol0 = solve(prob0, ECA(options=Metaheuristics.Options(f_calls_limit=fevals, f_tol=1e-3)))
     if lbfgs
         prob = OptimizationProblem(fpost, sol0.u, nothing)
         sol = solve(prob, LBFGS(); maxiters=2_000, g_tol=1e-1, f_tol=1e-7)

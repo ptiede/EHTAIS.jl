@@ -10,7 +10,11 @@ using DelimitedFiles
 
 Pkg.add(path="../")
 # Pkg.add(["Comonicon", "DataFrames", "CSV"])
-Pkg.instantiate()
+try
+    Pkg.instantiate()
+catch
+    @warn "Instantiate failed this is probably because you don't have internet access on a node"
+end
 Pkg.precompile()
 
 
