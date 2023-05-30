@@ -219,8 +219,8 @@ function snapshot_fit(img::IntensityMap, mod0::Float64, data::DataProds, distamp
     fpost = OptimizationFunction(tpost, Optimization.AutoForwardDiff())
     prob0 = OptimizationProblem(fpost, rand(ndim) .- 0.5, nothing, lb=fill(-5.0, ndim), ub=fill(5.0, ndim))
     fpost(rand(ndim), nothing)
-    @time fpost(rand(ndim), nothing)
-    sol0 = solve(prob0, ECA(options=Metaheuristics.Options(f_calls_limit=fevals, f_tol=1e-3)))
+    # @time fpost(rand(ndim), nothing)
+    sol0 = solve(prob0, ECA(options=Metaheuristics.Options(f_calls_limit=fevals, f_tol=1e-8)))
     if lbfgs
         prob = OptimizationProblem(fpost, sol0.u, nothing)
         sol = solve(prob, LBFGS(); maxiters=2_000, g_tol=1e-1, f_tol=1e-7)
@@ -236,7 +236,7 @@ function snapshot_fit(img::IntensityMap, mod0::Float64, data::DataProds, distamp
     r2data = NamedTuple{map(x->Symbol(:chi2_, x), keys(data))}(r2)
     rchi2 = chi2(mopt, values(data)...)/(sum(length, values(data)) - ndim)
     chi2data = merge(r2data, (rchi2 = rchi2, chi2=chi2(mopt, values(data)...), lklhd = lklhd))
-    @info "chi2 $(rchi2)"
+    # @info "chi2 $(rchi2)"
     return merge(xopt, chi2data)
 end
 

@@ -16,7 +16,6 @@ Pkg.instantiate()
 Pkg.precompile()
 
 using CondaPkg
-ENV["JULIA_CONDAPKG_OFFLINE"] = "yes"
 using EHTAIS
 
 ENV["JULIA_CONDAPKG_OFFLINE"] = "yes"
