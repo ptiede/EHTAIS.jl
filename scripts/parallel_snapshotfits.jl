@@ -8,16 +8,6 @@ using Pkg; Pkg.activate(filedir)
 using Distributed
 using DelimitedFiles
 
-Pkg.add(path="../")
-# Pkg.add(["Comonicon", "DataFrames", "CSV"])
-try
-    Pkg.instantiate()
-catch
-    @warn "Instantiate failed this is probably because you don't have internet access on a node"
-end
-Pkg.precompile()
-
-
 @everywhere begin
     using Pkg;Pkg.activate(filedir)
 end
