@@ -13,7 +13,6 @@ Pkg.add(path="../")
 Pkg.instantiate()
 Pkg.precompile()
 
-using CondaPkg
 using EHTAIS
 
 using PreferenceTools

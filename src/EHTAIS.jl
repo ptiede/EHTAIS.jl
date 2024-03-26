@@ -157,4 +157,11 @@ function snapshot_fit(img::IntensityMap, mod0::Float64, data::DataProds; fevals=
     return merge(xopt, chi2data)
 end
 
+function snapshot_fit(fname::String, readme::String, data::DataProds; fevals=100_000)
+    img, mod = load_image(fname, readme)
+    res = snapshot_fit(img, mod, data; fevals)
+    return merge(res, (image_filename = fname,))
+end
+
+
 end # module EHTAIS

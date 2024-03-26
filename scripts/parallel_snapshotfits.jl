@@ -11,9 +11,10 @@ using DelimitedFiles
 @everywhere begin
     using Pkg;Pkg.activate(filedir)
 end
-# using EHTAIS
+using Pyehtim
+using EHTAIS
 # @everywhere 1 using Pyehtim
-# @everywhere using EHTAIS
+@everywhere using EHTAIS
 
 using Comrade
 using Comonicon
