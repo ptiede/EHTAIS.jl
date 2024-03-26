@@ -14,8 +14,9 @@ Pkg.instantiate()
 Pkg.precompile()
 
 using EHTAIS
-
+using CondaPkg
 using PreferenceTools
-pkg"preference add CondaPkg offline=true"
+exe = CondaPkg.MicroMamba.executable()
+PreferenceTools.add("CondaPkg"; exe=exe, offline=true)
 
 @info "Finished setup have ready to run snapshot fits"

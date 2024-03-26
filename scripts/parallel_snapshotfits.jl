@@ -3,7 +3,6 @@ using Distributed
     const filedir = @__DIR__
 end
 
-
 using Pkg; Pkg.activate(filedir)
 using Distributed
 using DelimitedFiles
@@ -11,10 +10,12 @@ using DelimitedFiles
 @everywhere begin
     using Pkg;Pkg.activate(filedir)
 end
-using Pyehtim
-using EHTAIS
-# @everywhere 1 using Pyehtim
+
+@everywhere 1 using Pyehtim
 @everywhere using EHTAIS
+
+
+@info "Done Loading Modules"
 
 using Comrade
 using Comonicon
