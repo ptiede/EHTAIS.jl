@@ -6,11 +6,10 @@ using DataFrames
 using CSV
 using DelimitedFiles
 using Distributions
-using DistributionsAD
-using Zygote
 using OptimizationMetaheuristics
-using OptimizationOptimJL
-using ForwardDiff
+using Pyehtim
+using VLBIImagePriors
+
 
 export load_image, load_readme, load_data,
        Closures, AmpCP, Vis, station_tuple,
@@ -35,7 +34,7 @@ struct Vis{V} <: DataProds
 end
 
 function load_obs(uvname; cutzbl=true, fracnoise=0.01)
-    obs = load_ehtim_uvfits(uvname)
+    obs = ehtim.obsdata.load_uvfits(uvname)
     obsavg = scan_average(obs)
     if cutzbl
         obsavg = obsavg.flag_uvdist(uv_min=0.1e9)
@@ -65,22 +64,8 @@ function load_data end
 
 function load_data(uvname, ::Type{<:Closures}; snrcut=3.0, cutzbl=true, fracnoise=00.01)
     obs = load_obs(uvname; cutzbl, fracnoise)
-    return Closures(extract_lcamp(obs; snrcut), extract_cphase(obs; snrcut))
+    return Closures(extract_table(obs, LogClosureAmplitudes(;snrcut), ClosurePhases(;snrcut))...)
 end
-
-function load_data(uvname, ::Type{<:AmpCP}; snrcut=3.0, cutzbl=true, fracnoise=00.01)
-    obs = load_obs(uvname; cutzbl, fracnoise)
-    return AmpCP(extract_amp(obs; debias=true), extract_cphase(obs; snrcut))
-end
-
-function load_data(uvname, ::Type{<:Vis}; snrcut=0.0, cutzbl=true, fracnoise=00.01)
-    obs = load_obs(uvname; cutzbl, fracnoise)
-    return Vis(extract_vis(obs; snrcut, debias=true))
-end
-
-
-
-
 
 
 """
@@ -135,48 +120,25 @@ function load_image(file, readme)
     return IntensityMap(reshape(img, r.nx, r.ny)[end:-1:begin, :]./sum(img), grid), r.mod
 end
 
-function score_closures(θ, metadata)
-    (;mod, pa,) = θ
+function sky(θ, metadata)
+    (;mod, pa) = θ
     (;mimg, mod0) = metadata
     m = modify(mimg, Stretch(mod/mod0, mod/mod0), Rotate(pa))
-    #jT = jonesStokes(exp.(lgamp), gcache)
-    return m#JonesModel(jT, m)
+    return m
 end
 
-function create_post(mimg::Comrade.ModelImage, mod0::Float64, data::Closures, distamp=nothing)
+function create_post(mimg::VLBISkyModels.ModelImage, mod0::Float64, data::Closures)
     metadata = (;mimg, mod0)
-    lklhd = RadioLikelihood(score_closures, metadata, values(data)...)
-    prior = (
-                mod   = Uniform(μas2rad(0.1), μas2rad(6.0)),
-                pa    = Uniform(-π/2, 3π/2),
+    lklhd = RadioLikelihood(sky, values(data)...; skymeta=metadata)
+    prior = NamedDist(;
+                mod   = Uniform(μas2rad(0.1), μas2rad(8.0)),
+                pa    = DiagonalVonMises(0.0, (inv(π^2))),
             )
     post = Posterior(lklhd, prior)
     return post
 end
 
 
-function score_ampcp(θ, metadata)
-    (;mod, pa, flux, lgamp) = θ
-    (;mimg, mod0, gcache) = metadata
-    m = modify(mimg, Stretch(mod/mod0, mod/mod0), Rotate(pa), Renormalize(flux))
-    jT = jonesStokes(exp.(lgamp), gcache)
-    return JonesModel(jT, m)
-end
-
-function create_post(mimg::Comrade.ModelImage, mod0::Float64, data::AmpCP, distamp)
-    gcache = jonescache(data.amp, ScanSeg())
-    metadata = (;mimg, mod0, gcache)
-    lklhd = RadioLikelihood(score_ampcp, metadata, values(data)...)
-    gcache = jonescache(data.amp, ScanSeg())
-    prior = (
-                mod   = Uniform(μas2rad(0.1), μas2rad(10.0)),
-                pa    = Uniform(-π/2, 3π/2),
-                flux  = Uniform(0.1, 6.0),
-                lgamp = CalPrior(distamp, gcache)
-            )
-    post = Posterior(lklhd, prior)
-    return post
-end
 
 
 
@@ -206,31 +168,24 @@ res = snapshot_fit(imgname, readme, data; lbfgs=false)
 # For amplitudes + closure phases
 data = load_data(uvname, AmpCP)
 distamp = station_tuple(data.amp, Normal(0.0, 0.1); LM = Normal(0.0, 1.0))
-res = snapshot_fit(imgname, readme, data, distamp; lbfgs=true)
+res = snapshot_fit(imgname, readme, data, distamp)
 ```
 """
-function snapshot_fit(img::IntensityMap, mod0::Float64, data::DataProds, distamp=nothing; fevals=100_000, lbfgs=true)
+function snapshot_fit(img::IntensityMap, mod0::Float64, data::DataProds; fevals=100_000)
     mimg = modelimage(ContinuousImage(img, DeltaPulse()), FFTAlg())
-    post = create_post(mimg, mod0, data, distamp)
+    post = create_post(mimg, mod0, data)
 
     tpost = asflat(post)
     ndim = dimension(tpost)
 
-    fpost = OptimizationFunction(tpost, Optimization.AutoForwardDiff())
+    fpost = OptimizationFunction(tpost, Optimization.AutoZygote())
     prob0 = OptimizationProblem(fpost, rand(ndim) .- 0.5, nothing, lb=fill(-5.0, ndim), ub=fill(5.0, ndim))
     fpost(rand(ndim), nothing)
     # @time fpost(rand(ndim), nothing)
-    sol0 = solve(prob0, ECA(options=Metaheuristics.Options(f_calls_limit=fevals, f_tol=1e-8)))
-    if lbfgs
-        prob = OptimizationProblem(fpost, sol0.u, nothing)
-        sol = solve(prob, LBFGS(); maxiters=2_000, g_tol=1e-1, f_tol=1e-7)
-    else
-        sol = sol0
-    end
+    sol = solve(prob0, ECA(options=Metaheuristics.Options(f_calls_limit=fevals, f_tol=1e-8)))
 
-    score = post.lklhd.model
     xopt = Comrade.transform(tpost, sol.u)
-    mopt = score(xopt)
+    mopt = skymodel(post, xopt)
     lklhd = logdensityof(post.lklhd, xopt)
     r2 = map(x->chi2(mopt, x)/(length(x) - ndim), values(data))
     r2data = NamedTuple{map(x->Symbol(:chi2_, x), keys(data))}(r2)
@@ -242,9 +197,9 @@ end
 
 
 
-function snapshot_fit(fname::String, readme::String, data::DataProds, distamp=nothing; fevals=100_000, lbfgs=true)
+function snapshot_fit(fname::String, readme::String, data::DataProds; fevals=100_000)
     img, mod = load_image(fname, readme)
-    res = snapshot_fit(img, mod, data, distamp; fevals, lbfgs)
+    res = snapshot_fit(img, mod, data; fevals)
     return merge(res, (image_filename = fname,))
 end
 

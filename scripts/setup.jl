@@ -7,8 +7,6 @@ if nworkers() > 1
 end
 
 using Pkg; Pkg.activate(@__DIR__)
-using Distributed
-using DelimitedFiles
 
 
 Pkg.add(path="../")
@@ -18,6 +16,7 @@ Pkg.precompile()
 using CondaPkg
 using EHTAIS
 
-ENV["JULIA_CONDAPKG_OFFLINE"] = "yes"
+using PreferenceTools
+pkg"preference add CondaPkg backend=Current offline=true"
 
 @info "Finished setup have ready to run snapshot fits"

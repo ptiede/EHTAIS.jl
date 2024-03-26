@@ -25,4 +25,5 @@ Manifest.toml
 
 .CondaPkg
 data/*
+scrip
 .vscode/settings.json
