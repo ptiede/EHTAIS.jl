@@ -11,12 +11,9 @@ DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
 DelimitedFiles = "8bb1440f-4735-579b-a4ab-409b98df4dab"
 Distributed = "8ba89e20-285c-5b6f-9357-94700520ee1b"
 Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f"
-OptimizationBBO = "3e6eede4-6085-4f62-9a71-46d9bc1eb92b"
 OptimizationMetaheuristics = "3aafef2f-86ae-4776-b337-85a36adf0b55"
-OptimizationSpeedMapping = "3d669222-0d7d-4eb9-8a9f-d8528b0d9b91"
-Pyehtim = "3d61700d-6e5b-419a-8e22-9c066cf00468"
-ReverseDiff = "37e2e3b7-166d-5795-8a7a-e32c996b4267"
 VLBIImagePriors = "b1ba175b-8447-452c-b961-7db2d6f7a029"
 
 [compat]
 Comrade = "0.9"
+VLBIImagePriors = "^0.7.4"

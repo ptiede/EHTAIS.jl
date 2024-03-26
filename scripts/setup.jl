@@ -17,6 +17,6 @@ using CondaPkg
 using EHTAIS
 
 using PreferenceTools
-pkg"preference add CondaPkg backend=Current offline=true"
+pkg"preference add CondaPkg offline=true"
 
 @info "Finished setup have ready to run snapshot fits"

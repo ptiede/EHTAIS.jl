@@ -7,7 +7,6 @@ using CSV
 using DelimitedFiles
 using Distributions
 using OptimizationMetaheuristics
-using Pyehtim
 using VLBIImagePriors
 
 
@@ -32,41 +31,6 @@ end
 struct Vis{V} <: DataProds
     vis::V
 end
-
-function load_obs(uvname; cutzbl=true, fracnoise=0.01)
-    obs = ehtim.obsdata.load_uvfits(uvname)
-    obsavg = scan_average(obs)
-    if cutzbl
-        obsavg = obsavg.flag_uvdist(uv_min=0.1e9)
-    end
-
-    if fracnoise > 0.0
-        obsavg = obsavg.add_fractional_noise(fracnoise)
-    end
-    return obsavg
-end
-
-"""
-    load_data(uvname, dataprod::Type{<:Closures}; snrcut=3.0, cutzbl=true, fracnoise=0.01)
-    load_data(uvname, dataprod::Type{<:AmpCP};    snrcut=3.0, cutzbl=true, fracnoise=0.01)
-    load_data(uvname, dataprod::Type{<:Vis}; s    nrcut=0.0, cutzbl=true, fracnoise=0.01)
-
-Loads the data from `uvname` and extracts the data products `dataprod`.cpus
-
-# Arguments
-  - `uvname`: The file path for the uvfits data you would like to fit
-  - `dataprod`: The data products you would like to extract, see `subtypes(EHTAIS.DataProds)` for a list
-  - `snrcut`: The SNR cut use for the data products
-  - `cutzbl`: If true we flag any baselines whose uv distance < 0.1e9
-  - `fracnoise`: How much multiplicative fractional error to add to the data
-"""
-function load_data end
-
-function load_data(uvname, ::Type{<:Closures}; snrcut=3.0, cutzbl=true, fracnoise=00.01)
-    obs = load_obs(uvname; cutzbl, fracnoise)
-    return Closures(extract_table(obs, LogClosureAmplitudes(;snrcut), ClosurePhases(;snrcut))...)
-end
-
 
 """
     load_readme(readme::String)
@@ -145,13 +109,11 @@ end
 
 """
     snapshot_fit(img::IntensityMap, mod0::Float64, data::DataProds, distamp=nothing; fevals=250_000, lbfgs=true)
-    snapshot_fit(imgname::String, readme::String, data::DataProds, distamp=nothing; fevals=250_000, lbfgs=true)
 
 Computes a snapshot fit required for `ais`.
 
 # Arguments
   - `img/imgname`: If `img::IntensityMap` this should be the GRMHD snapshot you want to fit.
-                   If `imgname::String` this is the path to the file containing the GRMHD snapshot.
   - `mod0/readme`: If `mod0:Float64` this is the intrinsic M/D of the simulation
   - `data`: The data products you want to fit. See [`load_data`](@ref) to see more information about
             how to load data
@@ -178,7 +140,7 @@ function snapshot_fit(img::IntensityMap, mod0::Float64, data::DataProds; fevals=
     tpost = asflat(post)
     ndim = dimension(tpost)
 
-    fpost = OptimizationFunction(tpost, Optimization.AutoZygote())
+    fpost = OptimizationFunction(tpost)
     prob0 = OptimizationProblem(fpost, rand(ndim) .- 0.5, nothing, lb=fill(-5.0, ndim), ub=fill(5.0, ndim))
     fpost(rand(ndim), nothing)
     # @time fpost(rand(ndim), nothing)
@@ -194,14 +156,5 @@ function snapshot_fit(img::IntensityMap, mod0::Float64, data::DataProds; fevals=
     # @info "chi2 $(rchi2)"
     return merge(xopt, chi2data)
 end
-
-
-
-function snapshot_fit(fname::String, readme::String, data::DataProds; fevals=100_000)
-    img, mod = load_image(fname, readme)
-    res = snapshot_fit(img, mod, data; fevals)
-    return merge(res, (image_filename = fname,))
-end
-
 
 end # module EHTAIS

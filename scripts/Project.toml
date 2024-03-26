@@ -1,9 +1,11 @@
 [deps]
 CSV = "336ed68f-0bac-5ca0-87d4-7b16caf5d00b"
 Comonicon = "863f3e99-da2a-4334-8734-de3dacbe5542"
+Comrade = "99d987ce-9a1e-4df8-bc0b-1ea019aa547b"
 CondaPkg = "992eb4ea-22a4-4c89-a5bb-47a3300528ab"
 DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
 DelimitedFiles = "8bb1440f-4735-579b-a4ab-409b98df4dab"
 Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f"
 EHTAIS = "298f3469-2f3e-4d40-9353-5c0a7621aa52"
 PreferenceTools = "ba661fbb-e901-4445-b070-854aec6bfbc5"
+Pyehtim = "3d61700d-6e5b-419a-8e22-9c066cf00468"
