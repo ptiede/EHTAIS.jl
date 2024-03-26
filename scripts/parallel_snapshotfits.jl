@@ -65,7 +65,7 @@ Runs snapshot fitting on the list of files passed
 """
 @main function main(imfile::String, readme::String, uvfile::String,
                     outfile::String="snapshot_fitresults.csv";
-                    fevals::Int=250_000,
+                    fevals::Int=10_000,
                     )
 
     @info "Image files path: $(imfile)"
