@@ -6,12 +6,14 @@ end
 using Pkg; Pkg.activate(filedir)
 using Distributed
 using DelimitedFiles
+using Serialization
 
 @everywhere begin
     using Pkg;Pkg.activate(filedir)
+    @info "Done Activating"
 end
 
-@everywhere 1 using Pyehtim
+using EHTAIS
 @everywhere using EHTAIS
 
 
@@ -28,22 +30,13 @@ function loaddir(file)
     end
 end
 
-function load_obs(uvname; cutzbl=true, fracnoise=0.01)
-    obs = ehtim.obsdata.load_uvfits(uvname)
-    obsavg = scan_average(obs)
-    if cutzbl
-        obsavg = obsavg.flag_uvdist(uv_min=0.1e9)
-    end
-
-    if fracnoise > 0.0
-        obsavg = obsavg.add_fractional_noise(fracnoise)
-    end
-    return obsavg
+function load_obs(uvname)
+    return deserialize(uvname)
 end
 
-function load_data(uvname, ::Type{<:Closures}; snrcut=3.0, cutzbl=true, fracnoise=00.01)
-    obs = load_obs(uvname; cutzbl, fracnoise)
-    return Closures(extract_table(obs, LogClosureAmplitudes(;snrcut), ClosurePhases(;snrcut))...)
+function load_data(uvname, ::Type{<:Closures})
+    obs = load_obs(uvname)
+    return Closures(obs...)
 end
 
 
@@ -54,7 +47,8 @@ Runs snapshot fitting on the list of files passed
 
 - `imfile`: The file containing the paths to all the GRMHD we will to analyze
 - `readme`: The file with the GRMHD readme describing the dimensions
-- `uvfile`: The path to the data we are going to fit
+- `uvfile`: The path to the data we are going to fit, this must be serialized data
+            Please run `convert2com.jl` to convert the uvfits data to the correct format.
 - `outfile`: The name of the output file where the results are saved.
 
 # Options
